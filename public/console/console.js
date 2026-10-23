@@ -589,7 +589,7 @@ async function load() {
   if(!state.updateUIStarted){state.updateUIStarted=true;startUpdateUI({api,toast});}
 }
 document.addEventListener('submit',event=>{if(event.target.id==='chat-filter-form'){event.preventDefault();state.chatQuery=$('#chat-search-query').value;state.chatModeFilter=$('#chat-mode-filter').value;renderPage();}});
-document.addEventListener('change',event=>{if(event.target.id==='chat-mode-filter'){state.chatModeFilter=event.target.value;state.chatQuery=$('#chat-search').value;renderPage();}});
+document.addEventListener('change',event=>{if(event.target.id==='chat-mode-filter'){state.chatModeFilter=event.target.value;state.chatQuery=$('#chat-search-query').value;renderPage();}});
 document.addEventListener('input', event => {
   const input = event.target;
   if (input.dataset.contextKey) {
