@@ -240,7 +240,7 @@ export class SocialEngine {
       if(this.connection&&!await this.connection.check({force:true})){this.suspendConnection();return;}
       const dispatchEpoch=this.connection?.epoch;
       const decideCurrent=async(...args)=>{
-        if(this.connection&&(!await this.connection.check({force:true})||!this.connection.current(dispatchEpoch)))throw Error('DSH_CONNECTION_CHANGED');
+        if(this.connection&&!this.connection.current(dispatchEpoch))throw Error('DSH_CONNECTION_CHANGED');
         return this.decide(...args);
       };
       const queued=this.decisions.get(key);
