@@ -1,7 +1,10 @@
 // Trusted, bundled skill policy. Chat text cannot grant permissions.
 export const WEB_READER_TOOL = 'web_reader_read';
 export const WEB_READER_POLICY = Symbol.for('wechatagent.builtin-web-reader.v1');
-export const WEB_READER_LIMITS = Object.freeze({ pages: 3, bytes: 512 * 1024, chars: 12000, timeoutMs: 15000 });
+// 抓取上限。微信公众号文章页实测 3.4MB，正文容器在第 525KB，
+// 原 512KB 上限刚好把正文切掉，所以放宽到 4MB；真正进模型的字数仍由
+// chars 限制，下载时长由 timeoutMs 限制。
+export const WEB_READER_LIMITS = Object.freeze({ pages: 3, bytes: 4 * 1024 * 1024, chars: 12000, timeoutMs: 20000 });
 
 export function validateWebReaderSettings(value) {
   if (value === undefined) return;
@@ -20,6 +23,10 @@ export function webReaderEnabled(wechat, key) {
 export function normalizeWebUrl(raw) {
   if (typeof raw !== 'string' || raw.length > 2048) throw Error('网页链接过长或无效');
   raw = raw.trim();
+  // 聊天原文在进入提示词前会被转义，URL 的查询分隔符 & 变成 &amp;。
+  // 不还原的话 https://mp.weixin.qq.com/s?__biz=..&amp;mid=.. 里的
+  // mid/idx/sn/chksm 会被解析成 "amp;mid" 这样的参数名，文章地址直接失效。
+  raw = raw.replace(/&(?:amp|#0*38|#x0*26);/gi, '&');
   // Chinese requests often touch an ASCII hostname without a space. Keep the
   // actual hostname; preserve Unicode in paths, queries and international domains.
   raw = raw.replace(/^((?:https?:\/\/)?(?:[a-z0-9-]+\.)+(?:com|cn|net|org|tv|io|dev|edu|gov|co|me|info|app|ai|xyz|top|cc|uk|de|jp|hk|tw))(?=\p{Script=Han})[\s\S]*$/iu, '$1');
