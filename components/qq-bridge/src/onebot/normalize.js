@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import {verifiedAssistantSender} from '../../../../packages/dsh-social-bridge-plugin/assistant-policy.mjs';
-import { normalizeForwardedRecord, normalizeQuoteReply } from '../core/wechat-events.js';
+import { normalizeForwardedRecord, normalizeQuoteReply, normalizeSharedCard } from '../core/wechat-events.js';
 
 export function normalizeOneBotEvent(platform, adapter, event) {
   if (!event || event.post_type !== 'message' && event.post_type !== undefined) return null;
@@ -21,6 +21,7 @@ export function normalizeOneBotEvent(platform, adapter, event) {
   const messageType = types.length === 0 || types.every((type) => type === 'text' || type === 'at') ? 'text' : types.find((type) => type !== 'text' && type !== 'at');
   const timestamp = Number(event.time ?? Date.now() / 1000);
   const quoteReply=platform==='wechat'?normalizeQuoteReply(event.wechatagent?.quoteReply):null;
+  const sharedCard=platform==='wechat'?normalizeSharedCard(event.wechatagent?.sharedCard):null;
   // A peer may omit message_id. A stable fingerprint only deduplicates a short receive window.
   const fingerprint = crypto.createHash('sha256').update(JSON.stringify([platform, kind, conversationId, senderId, text, timestamp])).digest('hex').slice(0, 24);
   return {
@@ -34,5 +35,6 @@ export function normalizeOneBotEvent(platform, adapter, event) {
     ...(platform==='wechat' && event.wechatagent?.interaction==='pat'?{interaction:'pat'}:{}),
     ...(platform==='wechat' && normalizeForwardedRecord(event.wechatagent?.forwardedRecord)?{forwardedRecord:normalizeForwardedRecord(event.wechatagent.forwardedRecord)}:{}),
     ...(quoteReply?{quoteReply}:{}),
+    ...(sharedCard?{sharedCard}:{}),
   };
 }
